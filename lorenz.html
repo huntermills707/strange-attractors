@@ -21,9 +21,13 @@ const CONFIG = {
   rho:   28,
   beta:  8/3,
 
-  dt:                 0.01,   // integration step (seconds)
-  mouseSpawnInterval:  900,   // mouse‑seeded point every 5 s
-  edgeSpawnInterval:   700,  // edge‑seeded point every 10 s
+  attractorOffsetX: 0,   // shift in the Lorenz X direction
+  attractorOffsetY: 0,   // shift in the Lorenz Y direction
+  attractorOffsetZ: -25, // shift in the Lorenz Z direction
+
+  dt:                 0.01,  // integration step (seconds)
+  mouseSpawnInterval:  900,  // mouse‑seeded point every 5s
+  edgeSpawnInterval:   700,  // edge‑seeded point every 10s
   trailLife:          1000,  // overall fade‑out length (ms)
   pointLife:         45000,  // total point lifetime (ms)
   fadeIn:             4000,  // fade‑in duration (ms)
@@ -33,8 +37,8 @@ const CONFIG = {
   lineWidth:   3,
 
   // ---- Attractor placement / orientation ----
-  offsetXRatio: 0.5,    // 0 = left edge, 1 = right edge (default centre)
-  offsetYRatio: 1.0,    // 0 = top edge,  1 = bottom edge (default centre)
+  offsetXRatio: 0.5,    // 0=left edge, 1=right edge (default centre)
+  offsetYRatio: 0.5,    // 0=top edge,  1=bottom edge (default centre)
   rotationDeg:  0,      // attractor rotation (degrees CCW)
 
   // ---- Independent scaling of the attractor geometry ----
@@ -42,13 +46,14 @@ const CONFIG = {
   scaleYRatio: 2.0,     // vertical stretch (>1 larger, <1 smaller)
 
   // ---- Ellipsoidal colour mapping parameters ----
-  colorCenterXRatio: 0.5,   // centre of colour ellipse (horizontal)
+  colorCenterXRatio:  0.5,  // centre of colour ellipse (horizontal)
   colorCenterYRatio: 0.45,  // centre of colour ellipse (vertical)
-  ellipseXScale: 1.5,       // horizontal radius multiplier (1 = half‑width)
-  ellipseYScale: 1.1,       // vertical radius multiplier (1 = half‑height)
-  ellipseRotationDeg: 0,    // rotation of colour ellipse (degrees CCW)
+  ellipseXScale:      1.5,  // horizontal radius multiplier (1=half‑width)
+  ellipseYScale:      1.1,  // vertical radius multiplier (1=half‑height)
+  ellipseRotationDeg:   0,  // rotation of colour ellipse (degrees CCW)
 
   // Each entry is [r,g,b] with values already in the 0‑1 range.
+  // from https://github.com/politiken-journalism/scale-color-perceptual/blob/master/rgb/plasma.json
   colourLUT: [
     [0.050383, 0.029803, 0.527975],
     [0.063536, 0.028426, 0.533124],
@@ -321,27 +326,66 @@ window.addEventListener('resize', resize);
 resize();
 
 // -----------------------------------------------------------
-// Helpers
+// Pre‑computed radians for rotations
 // -----------------------------------------------------------
 const attractorRotRad = CONFIG.rotationDeg * Math.PI / 180;
 const ellipseRotRad   = CONFIG.ellipseRotationDeg * Math.PI / 180;
 
 // -----------------------------------------------------------
-// Projection – applies rotation, offset, and independent scaling
+// Projection – applies offset, rotation, canvas offset, and scaling
 // -----------------------------------------------------------
 function project(x, y, z){
+  // Apply the **global attractor offset**
+  const xo = x + CONFIG.attractorOffsetX;
+  const yo = y + CONFIG.attractorOffsetY;
+  const zo = z + CONFIG.attractorOffsetZ;
+
+  // Scale (10 px per Lorenz unit) then apply independent X/Y scaling
   const baseScaleX = 10 * CONFIG.scaleXRatio;
   const baseScaleY = 10 * CONFIG.scaleYRatio;
 
-  const xr =  x * Math.cos(attractorRotRad) - z * Math.sin(attractorRotRad);
-  const zr =  x * Math.sin(attractorRotRad) + z * Math.cos(attractorRotRad);
+  // Rotate the (offset) point around the origin
+  const xr =  xo * Math.cos(attractorRotRad) - zo * Math.sin(attractorRotRad);
+  const zr =  xo * Math.sin(attractorRotRad) + zo * Math.cos(attractorRotRad);
 
+  // Canvas‑proportional offset (centres the drawing)
   const offsetX = CONFIG.offsetXRatio * W;
   const offsetY = CONFIG.offsetYRatio * H;
 
+  // Final screen coordinates (canvas y‑axis is inverted)
   const sx = offsetX + xr * baseScaleX;
-  const sy = offsetY - zr * baseScaleY; // canvas y‑axis inverted
+  const sy = offsetY - zr * baseScaleY;
   return {sx, sy};
+}
+
+// -----------------------------------------------------------
+// **Corrected** inverse projection – canvas → raw Lorenz space
+// -----------------------------------------------------------
+function inverseProject(sx, sy){
+  // Reverse canvas offset
+  const offsetX = CONFIG.offsetXRatio * W;
+  const offsetY = CONFIG.offsetYRatio * H;
+  const xOff = sx - offsetX;
+  const yOff = offsetY - sy; // undo canvas y‑inversion
+
+  // Reverse scaling
+  const baseScaleX = 10 * CONFIG.scaleXRatio;
+  const baseScaleY = 10 * CONFIG.scaleYRatio;
+  const xr = xOff / baseScaleX;
+  const zr = yOff / baseScaleY;
+
+  // Reverse rotation
+  const cosR = Math.cos(-attractorRotRad);
+  const sinR = Math.sin(-attractorRotRad);
+  const xRot = xr * cosR - zr * sinR;
+  const zRot = xr * sinR + zr * cosR;
+
+  // **Reverse the global attractor offset**
+  const x = xRot - CONFIG.attractorOffsetX;
+  const y = 0; // dummy value for the ODE (not displayed)
+  const z = zRot - CONFIG.attractorOffsetZ;
+
+  return {x, y, z};
 }
 
 // -----------------------------------------------------------
@@ -378,7 +422,7 @@ function ellipsoidalNorm(px, py){
 }
 
 // -----------------------------------------------------------
-// Interpolate between two RGB triples (both in 0‑1 range)
+// Linear interpolation between two RGB triples (0‑1 range)
 // -----------------------------------------------------------
 function lerpRGB(c1, c2, t){
   return [
@@ -389,44 +433,22 @@ function lerpRGB(c1, c2, t){
 }
 
 // -----------------------------------------------------------
-// Get a colour from the lookup table based on a normalised t∈[0,1]
+// Get a colour from the lookup table, **inverted** (0 ↔ 1)
 // -----------------------------------------------------------
 function colourFromLUT(t){
   const lut = CONFIG.colourLUT;
   const maxIdx = lut.length - 1;
 
-  // *** Inverted mapping ***
-  const invertedT = 1 - t;               // flip 0↔1
-  const exact = invertedT * maxIdx;      // position in the LUT
+  // Invert the normalised distance
+  const invT = 1 - t;
+  const exact = invT * maxIdx;
   const idxLow = Math.floor(exact);
   const idxHigh = Math.min(maxIdx, idxLow + 1);
   const frac = exact - idxLow;
 
   const rgb = lerpRGB(lut[idxLow], lut[idxHigh], frac);
-  // Convert to CSS string (0‑255 range)
+  // Convert to CSS rgb string (0‑255 range)
   return `rgb(${Math.round(rgb[0]*255)},${Math.round(rgb[1]*255)},${Math.round(rgb[2]*255)})`;
-}
-
-// -----------------------------------------------------------
-// Inverse projection – raw canvas → Lorenz space (used for spawning)
-// -----------------------------------------------------------
-function inverseProject(sx, sy){
-  const offsetX = CONFIG.offsetXRatio * W;
-  const offsetY = CONFIG.offsetYRatio * H;
-  const xOff = sx - offsetX;
-  const yOff = offsetY - sy; // undo canvas y‑inversion
-
-  const baseScaleX = 10 * CONFIG.scaleXRatio;
-  const baseScaleY = 10 * CONFIG.scaleYRatio;
-  const xr = xOff / baseScaleX;
-  const zr = yOff / baseScaleY;
-
-  const cosR = Math.cos(-attractorRotRad);
-  const sinR = Math.sin(-attractorRotRad);
-  const x = xr * cosR - zr * sinR;
-  const z = xr * sinR + zr * cosR;
-  const y = 0; // dummy value for the ODE
-  return {x, y, z};
 }
 
 // -----------------------------------------------------------
@@ -442,7 +464,7 @@ class Point{
     this.trail.push({sx:start.sx, sy:start.sy, t:this.birth});
   }
 
-  // One RK4 integration step
+  // One RK4 integration step (dynamics unchanged)
   step(dt){
     const {sigma, rho, beta} = CONFIG;
     const f = (x, y, z) => ({
@@ -512,7 +534,6 @@ class Point{
       const col = baseCol.replace('rgb','rgba').replace(')', `,${alpha})`);
       ctx.fillStyle = col;
 
-      // Slightly larger dot for the very first seed point
       const radius = (this.trail.length===1) ? CONFIG.pointRadius*1.5 : CONFIG.pointRadius;
       ctx.beginPath();
       ctx.arc(cur.sx, cur.sy, radius, 0, Math.PI*2);
