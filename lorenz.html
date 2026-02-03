@@ -44,8 +44,8 @@ const CONFIG = {
   offsetYRatio: 0.5,    // 0=top edge,  1=bottom edge (default centre)
 
   // ---- Independent scaling of the attractor geometry ----
-  scaleXRatio: 3.0,     // horizontal stretch (>1 larger, <1 smaller)
-  scaleYRatio: 2.0,     // vertical stretch (>1 larger, <1 smaller)
+  scaleXRatio: 2,     // horizontal stretch (>1 larger, <1 smaller)
+  scaleYRatio: 2,     // vertical stretch (>1 larger, <1 smaller)
 
   // ---- Ellipsoidal colour mapping parameters ----
   colorCenterXRatio:  0.5,  // centre of colour ellipse (horizontal)
@@ -358,24 +358,19 @@ function project(x, y, z){
   const ya =  xb * Math.sin(attractorAlphaRotRad) + yb * Math.cos(attractorAlphaRotRad); 
   const za = zb;
 
-  // Scale (10px per Lorenz unit) then apply independent X/Y scaling
-  const baseScaleX = 10 * CONFIG.scaleXRatio;
-  const baseScaleY = 10 * CONFIG.scaleYRatio;
-  const baseScaleZ = 10;
-
   // Canvas‑proportional offset (centres the drawing)
   const offsetX = CONFIG.offsetXRatio * W;
   const offsetY = CONFIG.offsetYRatio * H;
 
   // Final screen coordinates (canvas y‑axis is inverted)
-  const sx = offsetX + xa * baseScaleX;
-  const sy = offsetY - ya * baseScaleY;
-  const sz = za * baseScaleZ;
+  const sx = offsetX + xa * W / 100 * CONFIG.scaleXRatio;
+  const sy = offsetY - ya * H / 100 * CONFIG.scaleYRatio;
+  const sz = za //* baseScaleZ;
   return {sx, sy, sz};
 }
 
 // -----------------------------------------------------------
-// **Corrected** inverse projection – canvas → raw Lorenz space
+// Inverse projection – canvas → raw Lorenz space
 // -----------------------------------------------------------
 function inverseProject(sx, sy, sz){
   // Reverse canvas offset
@@ -385,12 +380,9 @@ function inverseProject(sx, sy, sz){
   const yOff = offsetY - sy; // undo canvas y‑inversion
 
   // Reverse scaling
-  const baseScaleX = 10 * CONFIG.scaleXRatio;
-  const baseScaleY = 10 * CONFIG.scaleYRatio;
-  const baseScaleZ = 10;
-  const xr = xOff / baseScaleX;
-  const yr = yOff / baseScaleY;
-  const zr = sz / baseScaleZ;
+  const xr = xOff / W * 100 / CONFIG.scaleXRatio;
+  const yr = yOff / H * 100 / CONFIG.scaleYRatio;
+  const zr = sz /// baseScaleZ;
 
   // Reverse rotation
   // Alpha
