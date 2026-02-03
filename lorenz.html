@@ -24,6 +24,9 @@ const CONFIG = {
   attractorOffsetX: 0,   // shift in the Lorenz X direction
   attractorOffsetY: 0,   // shift in the Lorenz Y direction
   attractorOffsetZ: -25, // shift in the Lorenz Z direction
+  rotationAlphaDeg:  180,
+  rotationBetaDeg:  0,
+  rotationGammaDeg: 90,
 
   dt:                 0.01,  // integration step (seconds)
   mouseSpawnInterval:  900,  // mouse‑seeded point every 5s
@@ -39,7 +42,6 @@ const CONFIG = {
   // ---- Attractor placement / orientation ----
   offsetXRatio: 0.5,    // 0=left edge, 1=right edge (default centre)
   offsetYRatio: 0.5,    // 0=top edge,  1=bottom edge (default centre)
-  rotationDeg:  0,      // attractor rotation (degrees CCW)
 
   // ---- Independent scaling of the attractor geometry ----
   scaleXRatio: 3.0,     // horizontal stretch (>1 larger, <1 smaller)
@@ -328,7 +330,9 @@ resize();
 // -----------------------------------------------------------
 // Pre‑computed radians for rotations
 // -----------------------------------------------------------
-const attractorRotRad = CONFIG.rotationDeg * Math.PI / 180;
+const attractorAlphaRotRad = CONFIG.rotationAlphaDeg * Math.PI / 180;
+const attractorBetaRotRad = CONFIG.rotationBetaDeg * Math.PI / 180;
+const attractorGammaRotRad = CONFIG.rotationGammaDeg * Math.PI / 180;
 const ellipseRotRad   = CONFIG.ellipseRotationDeg * Math.PI / 180;
 
 // -----------------------------------------------------------
@@ -336,32 +340,44 @@ const ellipseRotRad   = CONFIG.ellipseRotationDeg * Math.PI / 180;
 // -----------------------------------------------------------
 function project(x, y, z){
   // Apply the **global attractor offset**
-  const xo = x + CONFIG.attractorOffsetX;
-  const yo = y + CONFIG.attractorOffsetY;
-  const zo = z + CONFIG.attractorOffsetZ;
-
-  // Scale (10 px per Lorenz unit) then apply independent X/Y scaling
-  const baseScaleX = 10 * CONFIG.scaleXRatio;
-  const baseScaleY = 10 * CONFIG.scaleYRatio;
+  const xr = x + CONFIG.attractorOffsetX;
+  const yr = y + CONFIG.attractorOffsetY;
+  const zr = z + CONFIG.attractorOffsetZ;
 
   // Rotate the (offset) point around the origin
-  const xr =  xo * Math.cos(attractorRotRad) - zo * Math.sin(attractorRotRad);
-  const zr =  xo * Math.sin(attractorRotRad) + zo * Math.cos(attractorRotRad);
+  // Gamma
+  const xg = xr;
+  const yg =  yr * Math.cos(attractorGammaRotRad) - zr * Math.sin(attractorGammaRotRad);
+  const zg =  yr * Math.sin(attractorGammaRotRad) + zr * Math.cos(attractorGammaRotRad);
+  // Beta
+  const xb =  xg * Math.cos(attractorBetaRotRad) + zg * Math.sin(attractorBetaRotRad);
+  const yb = yg;
+  const zb =  -xg * Math.sin(attractorBetaRotRad) + zg * Math.cos(attractorBetaRotRad);
+  // Alpha
+  const xa =  xb * Math.cos(attractorAlphaRotRad) - yb * Math.sin(attractorAlphaRotRad);
+  const ya =  xb * Math.sin(attractorAlphaRotRad) + yb * Math.cos(attractorAlphaRotRad); 
+  const za = zb;
+
+  // Scale (10px per Lorenz unit) then apply independent X/Y scaling
+  const baseScaleX = 10 * CONFIG.scaleXRatio;
+  const baseScaleY = 10 * CONFIG.scaleYRatio;
+  const baseScaleZ = 10;
 
   // Canvas‑proportional offset (centres the drawing)
   const offsetX = CONFIG.offsetXRatio * W;
   const offsetY = CONFIG.offsetYRatio * H;
 
   // Final screen coordinates (canvas y‑axis is inverted)
-  const sx = offsetX + xr * baseScaleX;
-  const sy = offsetY - zr * baseScaleY;
-  return {sx, sy};
+  const sx = offsetX + xa * baseScaleX;
+  const sy = offsetY - ya * baseScaleY;
+  const sz = za * baseScaleZ;
+  return {sx, sy, sz};
 }
 
 // -----------------------------------------------------------
 // **Corrected** inverse projection – canvas → raw Lorenz space
 // -----------------------------------------------------------
-function inverseProject(sx, sy){
+function inverseProject(sx, sy, sz){
   // Reverse canvas offset
   const offsetX = CONFIG.offsetXRatio * W;
   const offsetY = CONFIG.offsetYRatio * H;
@@ -371,19 +387,29 @@ function inverseProject(sx, sy){
   // Reverse scaling
   const baseScaleX = 10 * CONFIG.scaleXRatio;
   const baseScaleY = 10 * CONFIG.scaleYRatio;
+  const baseScaleZ = 10;
   const xr = xOff / baseScaleX;
-  const zr = yOff / baseScaleY;
+  const yr = yOff / baseScaleY;
+  const zr = sz / baseScaleZ;
 
   // Reverse rotation
-  const cosR = Math.cos(-attractorRotRad);
-  const sinR = Math.sin(-attractorRotRad);
-  const xRot = xr * cosR - zr * sinR;
-  const zRot = xr * sinR + zr * cosR;
+  // Alpha
+  const xa =  xr * Math.cos(-attractorAlphaRotRad) - yr * Math.sin(-attractorAlphaRotRad);
+  const ya =  xr * Math.sin(-attractorAlphaRotRad) + yr * Math.cos(-attractorAlphaRotRad);
+  const za = zr;
+  // Beta
+  const xb =  xa * Math.cos(-attractorBetaRotRad) + za * Math.sin(-attractorBetaRotRad);
+  const yb = ya;
+  const zb =  -xa * Math.sin(-attractorBetaRotRad) + za * Math.cos(-attractorBetaRotRad);
+  // Gamma
+  const xg = xb;
+  const yg =  yb * Math.cos(-attractorGammaRotRad) - zb * Math.sin(-attractorGammaRotRad);
+  const zg =  yb * Math.sin(-attractorGammaRotRad) + zb * Math.cos(-attractorGammaRotRad);
 
-  // **Reverse the global attractor offset**
-  const x = xRot - CONFIG.attractorOffsetX;
-  const y = 0; // dummy value for the ODE (not displayed)
-  const z = zRot - CONFIG.attractorOffsetZ;
+  // Reverse the global attractor offset
+  const x = xg - CONFIG.attractorOffsetX;
+  const y = yg - CONFIG.attractorOffsetY;
+  const z = zg - CONFIG.attractorOffsetZ;
 
   return {x, y, z};
 }
@@ -461,7 +487,7 @@ class Point{
     this.trail = [];
 
     const start = project(x, y, z);
-    this.trail.push({sx:start.sx, sy:start.sy, t:this.birth});
+    this.trail.push({sx:start.sx, sy:start.sy, sz:start.sz, t:this.birth});
   }
 
   // One RK4 integration step (dynamics unchanged)
@@ -480,7 +506,7 @@ class Point{
     this.y += dt/6 * (k1.dy + 2*k2.dy + 2*k3.dy + k4.dy);
     this.z += dt/6 * (k1.dz + 2*k2.dz + 2*k3.dz + k4.dz);
     const p = project(this.x, this.y, this.z);
-    this.trail.push({sx:p.sx, sy:p.sy, t:performance.now()});
+    this.trail.push({sx:p.sx, sy:p.sy, sz:p.sz, t:performance.now()});
   }
 
   pruneTrail(now){
@@ -558,7 +584,7 @@ canvas.addEventListener('mousemove', e => {
 
 /* -------------------- Mouse‑seeded points -------------------- */
 setInterval(() => {
-  const {x, y, z} = inverseProject(mouse.canvasX, mouse.canvasY);
+  const {x, y, z} = inverseProject(mouse.canvasX, mouse.canvasY, 0);
   points.push(new Point(x, y, z));
 }, CONFIG.mouseSpawnInterval);
 
@@ -570,7 +596,7 @@ function spawnEdgePoint(){
   else if (side===1){ sx = Math.random()*W; sy = 0; }           // top
   else if (side===2){ sx = W;           sy = Math.random()*H; }   // right
   else { sx = Math.random()*W; sy = H; }                       // bottom
-  const {x, y, z} = inverseProject(sx, sy);
+  const {x, y, z} = inverseProject(sx, sy, 0);
   points.push(new Point(x, y, z));
 }
 setInterval(spawnEdgePoint, CONFIG.edgeSpawnInterval);
