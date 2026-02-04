@@ -13,13 +13,21 @@
 
 <script>
 // ===========================================================
-// Configuration – tweak any of these values to change behaviour
+// Configuration
 // ===========================================================
+// Lorenz system constants
+const SIGMA = 10;
+const RHO = 28;
+const BETA = 8/3;
 const CONFIG = {
-  // Lorenz system constants
-  sigma: 10,
-  rho:   28,
-  beta:  8/3,
+  // Lorenz system functional relationship
+  f: function(x, y, z) {
+      return {
+        dx: SIGMA * (y - x),
+        dy: x * (RHO - z) - y,
+        dz: x * y - BETA * z
+      };
+    },
 
   attractorOffsetX: 0,   // shift in the Lorenz X direction
   attractorOffsetY: 0,   // shift in the Lorenz Y direction
@@ -330,10 +338,10 @@ resize();
 // -----------------------------------------------------------
 // Pre‑computed radians for rotations
 // -----------------------------------------------------------
-const attractorAlphaRotRad = CONFIG.rotationAlphaDeg * Math.PI / 180;
-const attractorBetaRotRad = CONFIG.rotationBetaDeg * Math.PI / 180;
-const attractorGammaRotRad = CONFIG.rotationGammaDeg * Math.PI / 180;
-const ellipseRotRad   = CONFIG.ellipseRotationDeg * Math.PI / 180;
+const attractorAlphaRotRad = CONFIG.rotationAlphaDeg   * Math.PI / 180;
+const attractorBetaRotRad  = CONFIG.rotationBetaDeg    * Math.PI / 180;
+const attractorGammaRotRad = CONFIG.rotationGammaDeg   * Math.PI / 180;
+const ellipseRotRad        = CONFIG.ellipseRotationDeg * Math.PI / 180;
 
 // -----------------------------------------------------------
 // Projection – applies offset, rotation, canvas offset, and scaling
@@ -347,15 +355,15 @@ function project(x, y, z){
   // Rotate the (offset) point around the origin
   // Gamma
   const xg = xr;
-  const yg =  yr * Math.cos(attractorGammaRotRad) - zr * Math.sin(attractorGammaRotRad);
-  const zg =  yr * Math.sin(attractorGammaRotRad) + zr * Math.cos(attractorGammaRotRad);
+  const yg = yr * Math.cos(attractorGammaRotRad) - zr * Math.sin(attractorGammaRotRad);
+  const zg = yr * Math.sin(attractorGammaRotRad) + zr * Math.cos(attractorGammaRotRad);
   // Beta
-  const xb =  xg * Math.cos(attractorBetaRotRad) + zg * Math.sin(attractorBetaRotRad);
+  const xb = xg * Math.cos(attractorBetaRotRad) + zg * Math.sin(attractorBetaRotRad);
   const yb = yg;
-  const zb =  -xg * Math.sin(attractorBetaRotRad) + zg * Math.cos(attractorBetaRotRad);
+  const zb = -xg * Math.sin(attractorBetaRotRad) + zg * Math.cos(attractorBetaRotRad);
   // Alpha
-  const xa =  xb * Math.cos(attractorAlphaRotRad) - yb * Math.sin(attractorAlphaRotRad);
-  const ya =  xb * Math.sin(attractorAlphaRotRad) + yb * Math.cos(attractorAlphaRotRad); 
+  const xa = xb * Math.cos(attractorAlphaRotRad) - yb * Math.sin(attractorAlphaRotRad);
+  const ya = xb * Math.sin(attractorAlphaRotRad) + yb * Math.cos(attractorAlphaRotRad); 
   const za = zb;
 
   // Canvas‑proportional offset (centres the drawing)
@@ -365,7 +373,7 @@ function project(x, y, z){
   // Final screen coordinates (canvas y‑axis is inverted)
   const sx = offsetX + xa * W / 100 * CONFIG.scaleXRatio;
   const sy = offsetY - ya * H / 100 * CONFIG.scaleYRatio;
-  const sz = za //* baseScaleZ;
+  const sz = za;
   return {sx, sy, sz};
 }
 
@@ -377,26 +385,26 @@ function inverseProject(sx, sy, sz){
   const offsetX = CONFIG.offsetXRatio * W;
   const offsetY = CONFIG.offsetYRatio * H;
   const xOff = sx - offsetX;
-  const yOff = offsetY - sy; // undo canvas y‑inversion
+  const yOff = offsetY - sy;
 
   // Reverse scaling
   const xr = xOff / W * 100 / CONFIG.scaleXRatio;
   const yr = yOff / H * 100 / CONFIG.scaleYRatio;
-  const zr = sz /// baseScaleZ;
+  const zr = sz;
 
   // Reverse rotation
   // Alpha
-  const xa =  xr * Math.cos(-attractorAlphaRotRad) - yr * Math.sin(-attractorAlphaRotRad);
-  const ya =  xr * Math.sin(-attractorAlphaRotRad) + yr * Math.cos(-attractorAlphaRotRad);
+  const xa = xr * Math.cos(-attractorAlphaRotRad) - yr * Math.sin(-attractorAlphaRotRad);
+  const ya = xr * Math.sin(-attractorAlphaRotRad) + yr * Math.cos(-attractorAlphaRotRad);
   const za = zr;
   // Beta
-  const xb =  xa * Math.cos(-attractorBetaRotRad) + za * Math.sin(-attractorBetaRotRad);
+  const xb = xa * Math.cos(-attractorBetaRotRad) + za * Math.sin(-attractorBetaRotRad);
   const yb = ya;
-  const zb =  -xa * Math.sin(-attractorBetaRotRad) + za * Math.cos(-attractorBetaRotRad);
+  const zb = -xa * Math.sin(-attractorBetaRotRad) + za * Math.cos(-attractorBetaRotRad);
   // Gamma
   const xg = xb;
-  const yg =  yb * Math.cos(-attractorGammaRotRad) - zb * Math.sin(-attractorGammaRotRad);
-  const zg =  yb * Math.sin(-attractorGammaRotRad) + zb * Math.cos(-attractorGammaRotRad);
+  const yg = yb * Math.cos(-attractorGammaRotRad) - zb * Math.sin(-attractorGammaRotRad);
+  const zg = yb * Math.sin(-attractorGammaRotRad) + zb * Math.cos(-attractorGammaRotRad);
 
   // Reverse the global attractor offset
   const x = xg - CONFIG.attractorOffsetX;
@@ -484,12 +492,7 @@ class Point{
 
   // One RK4 integration step (dynamics unchanged)
   step(dt){
-    const {sigma, rho, beta} = CONFIG;
-    const f = (x, y, z) => ({
-      dx: sigma * (y - x),
-      dy: x * (rho - z) - y,
-      dz: x * y - beta * z
-    });
+    const { f } = CONFIG;
     const k1 = f(this.x, this.y, this.z);
     const k2 = f(this.x + k1.dx*dt/2, this.y + k1.dy*dt/2, this.z + k1.dz*dt/2);
     const k3 = f(this.x + k2.dx*dt/2, this.y + k2.dy*dt/2, this.z + k2.dz*dt/2);
