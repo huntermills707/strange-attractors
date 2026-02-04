@@ -501,7 +501,12 @@ class Point{
     this.y += dt/6 * (k1.dy + 2*k2.dy + 2*k3.dy + k4.dy);
     this.z += dt/6 * (k1.dz + 2*k2.dz + 2*k3.dz + k4.dz);
     const p = project(this.x, this.y, this.z);
-    this.trail.push({sx:p.sx, sy:p.sy, sz:p.sz, t:performance.now()});
+    this.trail.push({
+      sx:isNaN(p.sx) ? 1e15 : p.sx,
+      sy:isNaN(p.sy) ? 1e15 : p.sy,
+      sz:isNaN(p.sz) ? 1e15 : p.sz,
+      t:performance.now()
+    });
   }
 
   pruneTrail(now){
