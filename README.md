@@ -1,4 +1,4 @@
-## Strange Attractors
+# Strange Attractors
 
 This repository contains browser-based visualizations for various strange attractors and chaotic dynamical systems.
 
@@ -29,5 +29,5 @@ No installation or build process is required. To run the visualizations:
 - `lorenz.html`: Standalone file for viewing the Lorenz Attractor.
 - `thomas.html`: Standalone file for viewing the Thomas Attractor.
 - `four_wing.html`: Standalone file for viewing the Four-Wing Attractor.
-- `LICENSE`: The project license file. strange-attractors
+- `LICENSE`: The project license file.
 
