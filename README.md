@@ -13,6 +13,7 @@ This repository currently includes the following attractors:
 - **Lorenz Attractor** (`lorenz.html`)
 - **Thomas Attractor** (`thomas.html`)
 - **Four-Wing Attractor** (`four_wing.html`)
+- **Laser Attractor** (`laser.html`)
 
 ## How to Use
 
