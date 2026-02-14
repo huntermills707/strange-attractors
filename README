@@ -1,0 +1,83 @@
+# p5.js Animation Showcase
+
+A web-based animation gallery built with **p5.js**. This project demonstrates how to display interactive generative art as a full-screen background with a configurable theme file and animation controls. It supports running on local servers via Python or Node.js.
+
+## Project Structure
+
+This project consists of four source files and two server-automation scripts.
+
+### Core Files
+
+- **`index.html`**
+  The main entry point for the application. It loads the p5.js library, the configuration file, and the main sketch script. It defines the UI controls (buttons) to switch between different animation modes.
+
+- **`mysketch.js`**
+  Contains the main logic for the p5.js animations. It handles window resizing, mouse interactions, and the global state management (switching between animations like "Flow Field" and "Bouncing Balls"). It uses a global variable pattern to read configurations without ES6 module complexity.
+
+- **`color-config.js`**
+  A configuration file that defines the color palettes and styling constants used by `mysketch.js`. This allows for easy theming of the animations without modifying the main logic code.
+
+- **`style.css`**
+  Defines the visual layout. Crucially, it applies `z-index` rules to ensure the canvas stays behind the content and the UI controls remain clickable and visible.
+
+### Server Scripts
+
+These scripts are convenience utilities to start a local static file server. You must use a local server to view the project; double-clicking `index.html` will likely fail due to browser CORS restrictions regarding local file imports.
+
+- **`start_py.sh`**
+  A shell script that starts a local web server using **Python 3**. It typically maps the current directory to HTTP traffic, allowing you to serve the static site without installing additional dependencies.
+
+- **`start_js.sh`**
+  A shell script that starts a local web server using **Node.js** (via `npx`). It typically uses a package like `serve` to provide a robust static file server with features like directory listing and proper MIME handling.
+
+## Prerequisites
+
+To run this project, you will need one of the following runtime environments installed:
+
+1.  **Python 3** (Recommended for simplicity)
+    *   Check if installed: `python3 --version`
+2.  **Node.js** (includes npm/npx)
+    *   Check if installed: `node --version`
+
+## Getting Started
+
+### 1. Setup Permissions
+On Linux or macOS, you must first ensure the shell scripts are executable. Run this command in your terminal to grant execute permissions:
+
+```bash
+chmod +x start_py.sh start_js.sh
+```
+
+### 2. Starting the Application
+
+You can choose to start the server using either method. Open your terminal in the project directory and use one of the following commands:
+
+**Option A: Start using Python**
+```bash
+./start_py.sh
+```
+
+**Option B: Start using Node.js**
+```bash
+./start_js.sh
+```
+
+Once you run a script, the terminal will display a message indicating the server is running, usually on `http://localhost:8000` (or port 3000 depending on script defaults).
+
+### 3. Viewing the Application
+
+1.  Open your web browser.
+2.  Navigate to the address indicated in your terminal (usually `http://localhost:8000`).
+3.  You will see the full-screen animation.
+4.  Use the control panel in the top-left corner to switch between "Flow Field" and "Bouncing Balls" modes.
+
+## Usage Details
+
+- **Flow Field Mode:** A mouse-interactive geometric animation that uses the `primary` color from `color-config.js`.
+- **Bouncing Balls Mode:** A physics-based animation using the `secondary` color.
+- **Resizing:** If you resize your browser window, the canvas automatically adjusts to maintain the background effect.
+
+## Troubleshooting
+
+- **"File not found" or blank screen:** Ensure you are running the script from the folder containing `index.html`. Do not open `index.html` directly from your file explorer.
+- **Permission denied:** If you receive a permission error running the scripts, re-run `chmod +x *.sh`.

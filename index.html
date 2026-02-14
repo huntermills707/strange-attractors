@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>p5.js Animation with Config</title>
+  <link rel="stylesheet" href="style.css">
+
+  <!-- 1. Load p5.js Library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+</head>
+<body>
+
+  <!-- Control Panel -->
+  <div class="controls">
+    <p>Animation Control:</p>
+    <button id="btn-flow">Flow Field</button>
+    <button id="btn-balls">Bouncing Balls</button>
+  </div>
+
+  <div class="content">
+    <h1>Foreground Content</h1>
+    <p id="info-text">Select an animation.</p>
+  </div>
+
+  <!-- 2. Load Config (Global Variables) -->
+  <script src="color-config.js"></script>
+
+  <!-- 3. Load Sketch (uses Global Variables) -->
+  <script src="mysketch.js"></script>
+
+</body>
+</html>
