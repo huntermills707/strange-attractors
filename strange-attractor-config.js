@@ -6,9 +6,9 @@ const FOUR_WING_CONFIG = {
 
   // Functional relationship (returns dx,dy,dz)
   f: function (x, y, z) {
-    const A = CONFIG.A,
-          B = CONFIG.B,
-          C = CONFIG.C;
+    const A = FOUR_WING_CONFIG.A,
+          B = FOUR_WING_CONFIG.B,
+          C = FOUR_WING_CONFIG.C;
     return {
       dx: A * x + y * z,
       dy: B * x + C * y - x * z,
@@ -63,12 +63,15 @@ const LORENZ_CONFIG = {
 
   // functional relationship
   f: function(x, y, z) {
-      return {
-        dx: SIGMA * (y - x),
-        dy: x * (RHO - z) - y,
-        dz: x * y - BETA * z
-      };
-    },
+    const SIGMA = LORENZ_CONFIG.SIGMA,
+          RHO = LORENZ_CONFIG.RHO,
+          BETA = LORENZ_CONFIG.BETA;
+    return {
+      dx: SIGMA * (y - x),
+      dy: x * (RHO - z) - y,
+      dz: x * y - BETA * z
+    };
+  },
 
   attractorOffsetX: 0,   // shift in the Lorenz X direction
   attractorOffsetY: 0,   // shift in the Lorenz Y direction
@@ -105,16 +108,17 @@ const LORENZ_CONFIG = {
 }
 
 const THOMAS_CONFIG = {
-  B: 0.208186;
+  B: 0.208186,
 
   // Thomas system functional relationship
   f: function(x, y, z) {
-      return {
-        dx: Math.sin(y) - B*x,
-        dy: Math.sin(z) - B*y,
-        dz: Math.sin(x) - B*z
-      };
-    },
+    const B = THOMAS_CONFIG.B;
+    return {
+      dx: Math.sin(y) - B*x,
+      dy: Math.sin(z) - B*y,
+      dz: Math.sin(x) - B*z
+    };
+  },
 
   attractorOffsetX: 0,   // shift in the Lorenz X direction
   attractorOffsetY: 0,   // shift in the Lorenz Y direction
@@ -160,12 +164,18 @@ const LASER_CONFIG = {
 
   // Laser system functional relationship
   f: function(x, y, z) {
-      return {
-        dx: A*y - A*x + B*y*z*z,
-        dy: C*x + D*x*z*z,
-        dz: E*z + K*x*x,
-      };
-    },
+    const A = LASER_CONFIG.A,
+          B = LASER_CONFIG.B,
+          C = LASER_CONFIG.C,
+          D = LASER_CONFIG.D,
+          E = LASER_CONFIG.E,
+          K = LASER_CONFIG.K;
+    return {
+      dx: A*y - A*x + B*y*z*z,
+      dy: C*x + D*x*z*z,
+      dz: E*z + K*x*x,
+    };
+  },
 
   attractorOffsetX: 0,   // shift in the Lorenz X direction
   attractorOffsetY: 0,   // shift in the Lorenz Y direction
@@ -208,12 +218,15 @@ const CHEN_CONFIG = {
 
   // Thomas system functional relationship
   f: function(x, y, z) {
-      return {
-        dx: A * x - y * z,
-        dy: B *y + x * z,
-        dz: C * z + x * y / 3,
-      };
-    },
+    const A = CHEN_CONFIG.A,
+          B = CHEN_CONFIG.B,
+          C = CHEN_CONFIG.C;
+    return {
+      dx: A * x - y * z,
+      dy: B *y + x * z,
+      dz: C * z + x * y / 3,
+    };
+  },
 
   attractorOffsetX: 0,   // shift in the Lorenz X direction
   attractorOffsetY: 0,   // shift in the Lorenz Y direction

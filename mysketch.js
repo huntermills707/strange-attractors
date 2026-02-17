@@ -1,165 +1,69 @@
-// mysketch.js
-// Uses global variable 'THEME_CONFIG' defined in color-config.js
-
-let currentMode = 'flow';
+let CONFIG = LORENZ_CONFIG;
+let themeMode = 'plasma';
 
 function setup() {
   let cnv = createCanvas(windowWidth, windowHeight);
   cnv.class('backgroundsketch');
 
   // Use config to set initial background
-  background(THEME_CONFIG.flow.background);
+  background(...THEMES[themeMode].background);
 
   // Attach buttons
-  document.getElementById('btn-flow').addEventListener('click', () => {
-    currentMode = 'flow';
-    background(THEME_CONFIG.flow.background);
+  document.getElementById('btn-viridis').addEventListener('click', () => {
+    themeMode = 'viridis';
+    console.log('viridis mode')
+    background(...THEMES[themeMode].background);
   });
 
-  document.getElementById('btn-balls').addEventListener('click', () => {
-    currentMode = 'balls';
-    background(THEME_CONFIG.balls.background);
+  document.getElementById('btn-plasma').addEventListener('click', () => {
+    console.log('plasma mode')
+    background(...THEMES[themeMode].background);
   });
-}
 
-function draw() {
-  if (currentMode === 'flow') {
-    drawFlowField();
-  } else if (currentMode === 'balls') {
-    drawBouncingBalls();
-  }
-}
+  document.getElementById('btn-chen').addEventListener('click', () => {
+    console.log('chen mode')
+    CONFIG = CHEN_CONFIG;
+    restart();
+  });
 
-// --- Animation 1: Flow Field ---
-function drawFlowField() {
-  // Access global config
-  let bg = THEME_CONFIG.flow.background;
-  let primary = THEME_CONFIG.flow.primary;
-  let fade = THEME_CONFIG.common.fadeAmount;
+  document.getElementById('btn-four-wing').addEventListener('click', () => {
+    console.log('four-wing mode')
+    CONFIG = FOUR_WING_CONFIG;
+    restart();
+  });
 
-  // Convert Hex to RGB to add alpha for trailing effect
-  let c = color(bg);
-  c.setAlpha(fade); 
-  background(c);
+  document.getElementById('btn-laser').addEventListener('click', () => {
+    console.log('four-wing mode')
+    CONFIG = LASER_CONFIG;
+    restart();
+  });
 
-  push();
-  translate(mouseX, mouseY);
-  rotate(frameCount * 0.05);
-  noStroke();
-  fill(primary);
-  rectMode(CENTER);
-  rect(0, 0, 50, 50);
-  pop();
+  document.getElementById('btn-lorenz').addEventListener('click', () => {
+    console.log('lornez mode')
+    CONFIG = LORENZ_CONFIG;
+    restart();
+  });
 
-  updateText("Flow Field Mode");
-}
-
-// --- Animation 2: Bouncing Balls ---
-function drawBouncingBalls() {
-  // Access global config
-  let bg = THEME_CONFIG.balls.background;
-  let secondary = THEME_CONFIG.balls.secondary;
-
-  // Convert Hex to RGB to add alpha
-  let c = color(bg);
-  c.setAlpha(20); // Harder fade for balls
-  background(c);
-
-  fill(secondary);
-  noStroke();
-
-  let x = (width / 2) + sin(frameCount * 0.1) * 200;
-  let y = (height / 2) + cos(frameCount * 0.15) * 100;
-  circle(x, y, 40);
-
-  updateText("Bouncing Balls Mode");
+  document.getElementById('btn-thomas').addEventListener('click', () => {
+    console.log('thomas mode')
+    CONFIG = THOMAS_CONFIG;
+    restart();
+  });
 }
 
 function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
-  // Reset background on resize to prevent glitchy trails
-  background(currentMode === 'flow' ? THEME_CONFIG.flow.background : THEME_CONFIG.balls.background);
-}
-
-// Helper to update HTML text
-function updateText(msg) {
-  let el = document.getElementById('info-text');
-  if (el.innerText !== msg) {
-    el.innerText = msg;
-  }
-}
-
-// ----------------------------------------------------------
-// p5.js lifecycle
-// ----------------------------------------------------------
-function setup() {
-  const myCanvas = createCanvas(windowWidth, windowHeight);
-  myCanvas.class('backgroundsketch');
-  // Use a dark background that slowly fades (same colour as original)
-  background(30, 45, 71);
-  // No continuous looping of `draw()` until we add points – but we want it always running.
-  // So nothing special here.
-}
-
-function draw() {
-  const now = millis();
-
-  // Fade‑out the previous frame (semi‑transparent overlay)
-  background(30, 45, 71, 64); // 64/255 ≈ 0.25 opacity (matches rgba(30,45,71,0.25))
-
-  // ---- Spawn new points if enough time elapsed ----
-  if (now - lastMouseSpawn > CONFIG.mouseSpawnInterval) {
-    const { x, y, z } = inverseProject(mouseX, mouseY, 0);
-    points.push(new Point(x, y, z));
-    lastMouseSpawn = now;
-  }
-
-  if (now - lastEdgeSpawn > CONFIG.edgeSpawnInterval) {
-    spawnEdgePoint();
-    lastEdgeSpawn = now;
-  }
-
-  // ---- Update / draw all points ----
-  for (let i = points.length - 1; i >= 0; i--) {
-    const p = points[i];
-    p.step(CONFIG.dt);
-    p.pruneTrail(now);
-    p.draw(now);
-    if (p.expired(now)) points.splice(i, 1);
-  }
-}
-
-// ----------------------------------------------------------
-// Edge‑seeded point generation (same logic as original)
-// ----------------------------------------------------------
-function spawnEdgePoint() {
-  const side = floor(random(4));
-  let sx, sy;
-  if (side === 0) {            // left
-    sx = 0;
-    sy = random(height);
-  } else if (side === 1) {     // top
-    sx = random(width);
-    sy = 0;
-  } else if (side === 2) {     // right
-    sx = width;
-    sy = random(height);
-  } else {                     // bottom
-    sx = random(width);
-    sy = height;
-  }
-  const { x, y, z } = inverseProject(sx, sy, 0);
-  points.push(new Point(x, y, z));
+  background(...THEMES[themeMode].background);
 }
 
 // ----------------------------------------------------------
 // Pre‑computed radians for rotations
 // ----------------------------------------------------------
 const rad = deg => deg * Math.PI / 180;
-const attractorAlphaRotRad = rad(CONFIG.rotationAlphaDeg);
-const attractorBetaRotRad  = rad(CONFIG.rotationBetaDeg);
-const attractorGammaRotRad = rad(CONFIG.rotationGammaDeg);
-const ellipseRotRad        = rad(CONFIG.ellipseRotationDeg);
+let attractorAlphaRotRad = rad(CONFIG.rotationAlphaDeg);
+let attractorBetaRotRad  = rad(CONFIG.rotationBetaDeg);
+let attractorGammaRotRad = rad(CONFIG.rotationGammaDeg);
+let ellipseRotRad        = rad(CONFIG.ellipseRotationDeg);
 
 // ----------------------------------------------------------
 // Global state
@@ -169,7 +73,22 @@ let lastMouseSpawn = 0;        // timestamp of last mouse‑spawn
 let lastEdgeSpawn = 0;         // timestamp of last edge‑spawn
 
 // ----------------------------------------------------------
-// Helper maths (identical to original)
+// Update Global State for Attarctors
+// ----------------------------------------------------------
+
+function restart() {
+  attractorAlphaRotRad = rad(CONFIG.rotationAlphaDeg);
+  attractorBetaRotRad  = rad(CONFIG.rotationBetaDeg);
+  attractorGammaRotRad = rad(CONFIG.rotationGammaDeg);
+  ellipseRotRad        = rad(CONFIG.ellipseRotationDeg); 
+
+  points = [];
+  lastMouseSpawn = 0;
+  lastEdgeSpawn = 0;   
+}
+
+// ----------------------------------------------------------
+// Helper maths
 // ----------------------------------------------------------
 function project(x, y, z) {
   // Global attractor offset
@@ -271,7 +190,7 @@ function lerpRGB(c1, c2, t) {
 
 // Colour from LUT, **inverted** (0↔1)
 function colourFromLUT(t) {
-  const lut = CONFIG.colourLUT;
+  const lut = THEMES[themeMode].cmap;
   const maxIdx = lut.length - 1;
   const invT = 1 - t;
   const exact = invT * maxIdx;
@@ -284,7 +203,7 @@ function colourFromLUT(t) {
 }
 
 // ----------------------------------------------------------
-// Point class – holds a Lorenz trajectory and its trail
+// Point class – holds a trajectory and its trail
 // ----------------------------------------------------------
 class Point {
   constructor(x, y, z) {
@@ -385,10 +304,55 @@ class Point {
 }
 
 // ----------------------------------------------------------
-// Window resize handling (p5 hook)
+// p5.js lifecycle
 // ----------------------------------------------------------
-function windowResized() {
-  resizeCanvas(windowWidth, windowHeight);
+function draw() {
+  const now = millis();
+
+  // Fade‑out the previous frame (semi‑transparent overlay)
+  background(...THEMES[themeMode].background, 64); // 64/255 ≈ 0.25 opacity (matches rgba(30,45,71,0.25))
+
+  // ---- Spawn new points if enough time elapsed ----
+  if (now - lastMouseSpawn > CONFIG.mouseSpawnInterval) {
+    const { x, y, z } = inverseProject(mouseX, mouseY, 0);
+    points.push(new Point(x, y, z));
+    lastMouseSpawn = now;
+  }
+
+  if (now - lastEdgeSpawn > CONFIG.edgeSpawnInterval) {
+    spawnEdgePoint();
+    lastEdgeSpawn = now;
+  }
+
+  // ---- Update / draw all points ----
+  for (let i = points.length - 1; i >= 0; i--) {
+    const p = points[i];
+    p.step(CONFIG.dt);
+    p.pruneTrail(now);
+    p.draw(now);
+    if (p.expired(now)) points.splice(i, 1);
+  }
 }
 
-
+// ----------------------------------------------------------
+// Edge‑seeded point generation 
+// ----------------------------------------------------------
+function spawnEdgePoint() {
+  const side = floor(random(4));
+  let sx, sy;
+  if (side === 0) {            // left
+    sx = 0;
+    sy = random(height);
+  } else if (side === 1) {     // top
+    sx = random(width);
+    sy = 0;
+  } else if (side === 2) {     // right
+    sx = width;
+    sy = random(height);
+  } else {                     // bottom
+    sx = random(width);
+    sy = height;
+  }
+  const { x, y, z } = inverseProject(sx, sy, 0);
+  points.push(new Point(x, y, z));
+}

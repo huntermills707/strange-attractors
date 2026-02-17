@@ -1,28 +1,3 @@
-const THEME_CONFIG = {
-  flow: {
-    primary: '#00ffcc',
-    background: '#101010'
-  },
-  balls: {
-    secondary: '#ff00cc',
-    background: '#202020'
-  },
-  common: {
-    fadeAmount: 10
-  }
-};
-
-const THEMES = {
-  plamsa: {
-    cmap: plasma_cmap,
-    background: ''
-  },
-  viridis: {
-    cmap: viridis_cmap,
-    background: ''
-  }
-}
-
 const plasma_cmap = [
   [0.050383, 0.029803, 0.527975],
   [0.063536, 0.028426, 0.533124],
@@ -540,3 +515,14 @@ const viridis_cmap = [
   [0.983868, 0.904867, 0.136897],
   [0.993248, 0.906157, 0.143936]
 ];
+
+const THEMES = {
+  plasma: {
+    cmap: plasma_cmap,
+    background: [0, 0, 0]
+  },
+  viridis: {
+    cmap: viridis_cmap,
+    background: [30, 45, 71]
+  }
+}
