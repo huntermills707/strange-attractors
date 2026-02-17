@@ -1,83 +1,98 @@
-# p5.js Animation Showcase
+# Strange Attractors Visualization
 
-A web-based animation gallery built with **p5.js**. This project demonstrates how to display interactive generative art as a full-screen background with a configurable theme file and animation controls. It supports running on local servers via Python or Node.js.
+A web-based interactive visualization of mathematical strange attractors, with all calculations performed client-side in the browser.
+
+## Overview
+
+This project renders **strange attractors**—mathematical structures arising from dynamical systems displaying chaotic behavior. The entire simulation runs in your browser, generating intricate fractal-like patterns from iterative mathematical equations without requiring any server-side processing.
+
+## Motivations
+
+This project was developed as an interactive background component for Hugo static sites. Inspired by techniques for embedding p5.js and JavaScript visualizations in static site generators, this implementation creates a living, mathematical backdrop that adds dynamic visual interest to otherwise static pages.
+
+The approach follows methods described by Andreas Handel for [testing JavaScript visualizations in Hugo sites](https://aimundo.rbind.io/blog/2021-07-25-testing-javascript-visualizations/) and Nathan's guide on [using p5.js as a background for Hugo](https://nathan.exchange/posts/p5js-background-for-hugo/). These resources demonstrate how to seamlessly integrate Processing/p5.js sketches into Hugo's templating system while maintaining site performance.
+
+See it in action at [volundarhus.com](https://volundarhus.com), where the attractor visualization runs as a full-page background behind the site content.
+
+## Features
+
+- **Client-Side Computation**: All attractor calculations performed in real-time using JavaScript
+- **Real-time Visualization**: Interactive rendering of complex geometric patterns via HTML5 Canvas
+- **Configurable Systems**: Adjust attractor parameters in `strange-attractor-config.js` to explore different equations (Lorenz, Thomas, Chen, etc.)
+- **Customizable Rendering**: Modify color schemes, point sizes, and trail effects through `color-config.js`
+- **Zero Dependencies**: Pure client-side application—no server or installation required
 
 ## Project Structure
 
-This project consists of four source files and two server-automation scripts.
+```
+strange-attractors/
+├── index.html                  # Main HTML page and canvas container
+├── strange-attractor.js        # Core visualization and calculation logic
+├── strange-attractor-config.js # Attractor equations and parameter configurations
+├── color-config.js             # Color palettes and rendering styles
+├── style.css                   # Web interface styling
+├── start_py.sh                 # Optional: launches local Python HTTP server
+├── start_js.sh                 # Optional: launches local Node.js HTTP server
+└── raw_html/                   # Legacy HTML files with all in one implementaions
 
-### Core Files
-
-- **`index.html`**
-  The main entry point for the application. It loads the p5.js library, the configuration file, and the main sketch script. It defines the UI controls (buttons) to switch between different animation modes.
-
-- **`mysketch.js`**
-  Contains the main logic for the p5.js animations. It handles window resizing, mouse interactions, and the global state management (switching between animations like "Flow Field" and "Bouncing Balls"). It uses a global variable pattern to read configurations without ES6 module complexity.
-
-- **`color-config.js`**
-  A configuration file that defines the color palettes and styling constants used by `mysketch.js`. This allows for easy theming of the animations without modifying the main logic code.
-
-- **`style.css`**
-  Defines the visual layout. Crucially, it applies `z-index` rules to ensure the canvas stays behind the content and the UI controls remain clickable and visible.
-
-### Server Scripts
-
-These scripts are convenience utilities to start a local static file server. You must use a local server to view the project; double-clicking `index.html` will likely fail due to browser CORS restrictions regarding local file imports.
-
-- **`start_py.sh`**
-  A shell script that starts a local web server using **Python 3**. It typically maps the current directory to HTTP traffic, allowing you to serve the static site without installing additional dependencies.
-
-- **`start_js.sh`**
-  A shell script that starts a local web server using **Node.js** (via `npx`). It typically uses a package like `serve` to provide a robust static file server with features like directory listing and proper MIME handling.
-
-## Prerequisites
-
-To run this project, you will need one of the following runtime environments installed:
-
-1.  **Python 3** (Recommended for simplicity)
-    *   Check if installed: `python3 --version`
-2.  **Node.js** (includes npm/npx)
-    *   Check if installed: `node --version`
-
-## Getting Started
-
-### 1. Setup Permissions
-On Linux or macOS, you must first ensure the shell scripts are executable. Run this command in your terminal to grant execute permissions:
-
-```bash
-chmod +x start_py.sh start_js.sh
 ```
 
-### 2. Starting the Application
+## Usage
 
-You can choose to start the server using either method. Open your terminal in the project directory and use one of the following commands:
+### Quick Start (Standalone)
 
-**Option A: Start using Python**
+Simply open `index.html` directly in any modern web browser:
+
+```bash
+# Linux/Mac
+open index.html
+
+# Windows
+start index.html
+```
+
+Or double-click the file in your file manager.
+
+### Local Server (Optional)
+
+For development or avoiding CORS issues with module imports:
+
+**Using Python (simple HTTP server):**
 ```bash
 ./start_py.sh
+# Or manually: python3 -m http.server 8000
 ```
 
-**Option B: Start using Node.js**
+**Using Node.js:**
 ```bash
 ./start_js.sh
+# Or manually: npx serve or node server.js
 ```
 
-Once you run a script, the terminal will display a message indicating the server is running, usually on `http://localhost:8000` (or port 3000 depending on script defaults).
+Then navigate to `http://localhost:8000`.
 
-### 3. Viewing the Application
+### Configuration
 
-1.  Open your web browser.
-2.  Navigate to the address indicated in your terminal (usually `http://localhost:8000`).
-3.  You will see the full-screen animation.
-4.  Use the control panel in the top-left corner to switch between "Flow Field" and "Bouncing Balls" modes.
+- **Attractor Parameters**: Edit `strange-attractor-config.js` to change equations, initial conditions, time steps, or switch between attractor types
+- **Visual Appearance**: Edit `color-config.js` to adjust color gradients, background colors, point opacity, and trail persistence
 
-## Usage Details
+## Technical Details
 
-- **Flow Field Mode:** A mouse-interactive geometric animation that uses the `primary` color from `color-config.js`.
-- **Bouncing Balls Mode:** A physics-based animation using the `secondary` color.
-- **Resizing:** If you resize your browser window, the canvas automatically adjusts to maintain the background effect.
+- **Computation Engine**: Pure JavaScript—iterates millions of points using attractor equations directly in the browser
+- **Rendering**: HTML5 Canvas API for high-performance pixel manipulation and trail rendering
+- **Architecture**: Modular ES6 modules separating mathematical logic (`strange-attractor.js`), configuration (`*-config.js`), and presentation (`style.css`)
+- **Performance**: Optimized for 60fps rendering with configurable iteration counts
 
-## Troubleshooting
+## Browser Compatibility
 
-- **"File not found" or blank screen:** Ensure you are running the script from the folder containing `index.html`. Do not open `index.html` directly from your file explorer.
-- **Permission denied:** If you receive a permission error running the scripts, re-run `chmod +x *.sh`.
+- Chrome/Edge
+- Firefox
+- Safari
+- Opera
+
+## Contributing
+
+Areas for expansion:
+- Additional attractor types (Thomas, Duffing, Chua, Halvorsen, etc.)
+- Real-time parameter adjustment UI (sliders/controls)
+- 3D attractor support with WebGL

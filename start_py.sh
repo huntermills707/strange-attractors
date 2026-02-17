@@ -1,2 +1,2 @@
 #! /bin/sh
-python -m http.serve
+python -m http.server
