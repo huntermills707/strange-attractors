@@ -16,6 +16,7 @@ function setup() {
   });
 
   document.getElementById('btn-plasma').addEventListener('click', () => {
+    themeMode = 'plasma';
     console.log('plasma mode')
     background(...THEMES[themeMode].background);
   });
