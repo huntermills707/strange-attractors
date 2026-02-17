@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>p5.js Strange Attractor</title>
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Load p5.js Library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+</head>
+<body>
+
+  <!-- Attractor Panel -->
+  <div class="attractor_controls">
+    <p>Attractor Control:</p>
+    <button id="btn-chen">Chen</button>
+    <button id="btn-four-wing">Four Wing</button>
+    <button id="btn-laser">Laser</button>
+    <button id="btn-lorenz">Lorenz</button>
+    <button id="btn-thomas">Thomas</button>
+  </div>
+
+  <!-- Control Panel -->
+  <div class="color_controls">
+    <p>Color Control:</p>
+    <button id="btn-viridis">Viridis</button>
+    <button id="btn-plasma">Plasma</button>
+  </div>
+
+
+  <!-- Load Configs -->
+  <script src="color-config.js"></script>
+  <script src="strange-attractor-config.js"></script>
+
+  <!-- Load Sketch (uses Global Variables) -->
+  <script src="strange-attractor.js"></script>
+
+</body>
+</html>
